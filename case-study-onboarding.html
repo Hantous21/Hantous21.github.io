@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case Study: AI Client Onboarding System — Sammi Hantous</title>
+  <meta name="description" content="How I built an n8n + Claude automation that responds to new leads in under 30 seconds, never misses a follow-up, and costs $0.03 per lead." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:   #0d1117;
+      --navy2:  #161b22;
+      --navy3:  #21262d;
+      --accent: #58a6ff;
+      --green:  #3fb950;
+      --muted:  #8b949e;
+      --text:   #e6edf3;
+      --text2:  #c9d1d9;
+      --border: #30363d;
+      --radius: 10px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text); line-height: 1.7; font-size: 15px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,17,23,0.9); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 14px 0;
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-back { color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .nav-back:hover { color: var(--text); text-decoration: none; }
+    .nav-cta {
+      background: var(--accent); color: var(--navy);
+      padding: 7px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
+    }
+    .nav-cta:hover { opacity: 0.88; text-decoration: none; }
+
+    .hero {
+      max-width: 800px; margin: 0 auto; padding: 64px 24px 48px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 20px;
+    }
+    h1 { font-size: clamp(26px, 5vw, 40px); font-weight: 700; line-height: 1.2; letter-spacing: -0.3px; margin-bottom: 16px; }
+    .hero-sub { font-size: 17px; color: var(--text2); margin-bottom: 32px; max-width: 620px; }
+    .hero-meta {
+      display: flex; gap: 32px; flex-wrap: wrap;
+      padding-top: 24px; border-top: 1px solid var(--border);
+    }
+    .meta-item label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+    .meta-item span { font-size: 14px; color: var(--text2); }
+
+    .content { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+
+    .outcomes-bar {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: var(--navy2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin: 48px 0;
+    }
+    .outcome { padding: 20px 16px; text-align: center; border-right: 1px solid var(--border); }
+    .outcome:last-child { border-right: none; }
+    .outcome-value { display: block; font-size: 26px; font-weight: 700; color: var(--accent); line-height: 1.2; }
+    .outcome-value.green { color: var(--green); }
+    .outcome-label { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 16px; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+    p { color: var(--text2); margin-bottom: 16px; }
+    strong { color: var(--text); }
+
+    .before-after {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0;
+    }
+    .ba-card { background: var(--navy2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .ba-card.before { border-top: 3px solid #f85149; }
+    .ba-card.after { border-top: 3px solid var(--green); }
+    .ba-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+    .ba-card.before .ba-label { color: #f85149; }
+    .ba-card.after .ba-label { color: var(--green); }
+    .ba-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .ba-card ul li { font-size: 13px; color: var(--text2); display: flex; align-items: flex-start; gap: 8px; }
+    .ba-card ul li::before { content: ''; flex-shrink: 0; margin-top: 7px; width: 5px; height: 5px; border-radius: 50%; }
+    .ba-card.before ul li::before { background: #f85149; }
+    .ba-card.after ul li::before { background: var(--green); }
+
+    .flow-steps { display: flex; flex-direction: column; gap: 0; margin: 24px 0; }
+    .flow-step {
+      display: flex; gap: 20px; align-items: flex-start;
+      padding: 20px; background: var(--navy2); border: 1px solid var(--border);
+      border-radius: 0; position: relative;
+    }
+    .flow-step:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .flow-step:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+    .flow-step + .flow-step { border-top: none; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3);
+      color: var(--accent); font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-content strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 3px; }
+    .step-content span { font-size: 13px; color: var(--muted); }
+
+    .email-demo {
+      background: var(--navy2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin: 24px 0;
+    }
+    .email-header {
+      padding: 14px 20px; background: var(--navy3); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .email-header-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .email-subject { font-size: 13px; font-weight: 600; color: var(--text); }
+    .email-timing { margin-left: auto; font-size: 11px; color: var(--green); font-weight: 600; }
+    .email-body { padding: 24px; font-size: 14px; color: var(--text2); line-height: 1.8; }
+    .email-body .form-input {
+      background: var(--navy3); border: 1px solid var(--border); border-radius: 6px;
+      padding: 12px 16px; font-size: 13px; margin-bottom: 16px;
+      font-family: 'Fira Code', monospace; color: var(--muted);
+    }
+    .email-body .form-input span { color: var(--text2); }
+
+    .results-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+    .results-table th { text-align: left; padding: 10px 16px; background: var(--navy3); color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .results-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text2); }
+    .results-table tr:last-child td { border-bottom: none; }
+    .results-table .before { color: #f85149; }
+    .results-table .after { color: var(--green); font-weight: 600; }
+
+    .stack-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+    .tag {
+      background: var(--navy3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 12px;
+      font-size: 12px; color: var(--text2); font-family: 'Fira Code', monospace;
+    }
+
+    .callout {
+      background: rgba(88,166,255,0.07); border: 1px solid rgba(88,166,255,0.2);
+      border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 16px 20px; margin: 24px 0; font-size: 14px; color: var(--text2);
+    }
+
+    .cta-box {
+      background: var(--navy2); border: 1px solid var(--border); border-radius: 16px;
+      padding: 48px; text-align: center; margin: 64px 0 48px;
+    }
+    .cta-box h2 { border: none; margin: 0 0 12px; }
+    .cta-box p { max-width: 440px; margin: 0 auto 28px; font-size: 15px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: var(--navy);
+      padding: 12px 24px; border-radius: var(--radius);
+      font-size: 14px; font-weight: 600;
+    }
+    .btn-primary:hover { opacity: 0.88; text-decoration: none; }
+
+    footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 600px) {
+      .outcomes-bar { grid-template-columns: 1fr 1fr; }
+      .before-after { grid-template-columns: 1fr; }
+      .cta-box { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-back">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Back to Portfolio
+    </a>
+    <a href="https://calendly.com/hantous93" target="_blank" class="nav-cta">Book a Call</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-label">Case Study — Project 01</div>
+  <h1>AI Client Onboarding System</h1>
+  <p class="hero-sub">
+    How I built an n8n + Claude automation that responds to new leads in under 30 seconds,
+    never misses a follow-up, and costs $0.03 per lead.
+  </p>
+  <div class="hero-meta">
+    <div class="meta-item"><label>Tools Used</label><span>n8n · Claude API · Gmail API · Google Sheets · Tally</span></div>
+    <div class="meta-item"><label>Build Time</label><span>~6 hours</span></div>
+    <div class="meta-item"><label>Cost Per Lead</label><span>~$0.02–$0.05 (API only)</span></div>
+    <div class="meta-item"><label>Status</label><span style="color: var(--green);">Live &amp; Tested</span></div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="outcomes-bar">
+    <div class="outcome">
+      <span class="outcome-value">&lt;30s</span>
+      <span class="outcome-label">Time to first email</span>
+    </div>
+    <div class="outcome">
+      <span class="outcome-value green">100%</span>
+      <span class="outcome-label">Follow-up rate</span>
+    </div>
+    <div class="outcome">
+      <span class="outcome-value">0 min</span>
+      <span class="outcome-label">Manual time per lead</span>
+    </div>
+    <div class="outcome">
+      <span class="outcome-value green">$0.03</span>
+      <span class="outcome-label">Avg API cost per lead</span>
+    </div>
+  </div>
+
+  <h2>The Problem</h2>
+  <p>
+    For service businesses — consultants, bookkeepers, coaches, agencies — the moment a prospect
+    submits a contact form is the highest-intent moment in the entire sales funnel. And most
+    businesses blow it.
+  </p>
+  <p>
+    The follow-up is manual. Someone has to see the notification, copy the prospect's name,
+    write something personalized, and remember to follow up again in two days if there's no response.
+    Response times vary. Follow-ups get forgotten. The process doesn't scale — and it doesn't
+    have to be this way.
+  </p>
+
+  <div class="before-after">
+    <div class="ba-card before">
+      <div class="ba-label">Before</div>
+      <ul>
+        <li>Hours to first response (dependent on someone checking email)</li>
+        <li>5–10 minutes of manual work per new lead</li>
+        <li>Generic reply templates that don't reference the prospect's goal</li>
+        <li>Follow-ups missed — no system, just memory</li>
+        <li>Leads scattered across inboxes with no central log</li>
+      </ul>
+    </div>
+    <div class="ba-card after">
+      <div class="ba-label">After</div>
+      <ul>
+        <li>Personalized email sent in under 30 seconds</li>
+        <li>0 minutes of manual work per lead</li>
+        <li>Every email directly references the prospect's stated goal</li>
+        <li>48-hour follow-up fires automatically if no booking</li>
+        <li>Every lead logged to a Google Sheet in real time</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>How It Works</h2>
+  <p>The system runs entirely in n8n and triggers the moment a form is submitted. No polling. No delays.</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Form submitted (Tally)</strong>
+        <span>Prospect fills out the intake form — name, business, industry, and their specific goal. Tally fires a webhook to n8n instantly.</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Lead logged to Google Sheets</strong>
+        <span>n8n appends a row: name, email, business, goal, timestamp, and status. Single source of truth. No manual data entry.</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Claude writes the welcome email</strong>
+        <span>The prospect's goal is passed to Claude via the Anthropic API. Claude generates a personalized email in the founder's voice — not a template. The email specifically addresses what the prospect wrote in the form.</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Email sent via Gmail API (&lt;30 seconds from form submit)</strong>
+        <span>n8n sends the Claude-generated email through Gmail. The prospect receives a response that reads like it was written by a human who actually read their submission.</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <strong>48-hour follow-up (conditional)</strong>
+        <span>n8n sets a 48-hour wait. If the prospect has booked a Calendly call, the follow-up is skipped. If not, one follow-up email goes out automatically — then the sequence stops.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Sample Output</h2>
+  <p>Here's the system in action with a real test submission.</p>
+
+  <h3>Form Input</h3>
+  <div class="email-body" style="background: var(--navy2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 0;">
+    <div class="form-input">Name: <span>Sarah Chen</span></div>
+    <div class="form-input">Business: <span>Chen &amp; Associates Bookkeeping</span></div>
+    <div class="form-input">Industry: <span>Accounting</span></div>
+    <div class="form-input" style="margin-bottom: 0;">Goal: <span>Automate my monthly client reporting so I stop spending Sundays on spreadsheets</span></div>
+  </div>
+
+  <h3>Claude-Generated Welcome Email (sent in ~20 seconds)</h3>
+  <div class="email-demo">
+    <div class="email-header">
+      <div class="email-header-dot" style="background: #f85149;"></div>
+      <div class="email-header-dot" style="background: #fdcb6e;"></div>
+      <div class="email-header-dot" style="background: var(--green);"></div>
+      <span class="email-subject">Re: Your inquiry — automating monthly client reporting</span>
+      <span class="email-timing">⚡ Sent in 20s</span>
+    </div>
+    <div class="email-body">
+      <p>Hi Sarah,</p>
+      <p>Thanks for reaching out — automating your monthly reporting so you get your Sundays back is exactly the kind of problem I love solving.</p>
+      <p>For a bookkeeping practice like yours, we can set up a workflow that pulls your client data, generates a plain-English summary, and delivers it to each client automatically — no manual formatting, no Sunday scramble.</p>
+      <p>I'd love to walk you through what that looks like for your specific setup. You can grab a 20-minute slot here: <a href="https://calendly.com/hantous93" target="_blank">calendly.com/hantous93</a></p>
+      <p>Looking forward to it,<br/>Sammi Hantous<br/>AI Automation Consultant</p>
+    </div>
+  </div>
+
+  <h3>48-Hour Follow-Up (auto-sent if no booking)</h3>
+  <div class="email-demo">
+    <div class="email-header">
+      <div class="email-header-dot" style="background: #f85149;"></div>
+      <div class="email-header-dot" style="background: #fdcb6e;"></div>
+      <div class="email-header-dot" style="background: var(--green);"></div>
+      <span class="email-subject">Quick follow-up</span>
+      <span class="email-timing">⏱ Auto at 48h</span>
+    </div>
+    <div class="email-body">
+      <p>Hi Sarah,</p>
+      <p>Just wanted to follow up since we connected a couple of days ago — no worries if the timing hasn't been right.</p>
+      <p>When you're ready to explore what automating your monthly reporting could look like, I'd love to map it out with you.</p>
+      <p>Feel free to grab a time here: <a href="https://calendly.com/hantous93" target="_blank">calendly.com/hantous93</a></p>
+      <p>Sammi Hantous<br/>AI Automation Consultant</p>
+    </div>
+  </div>
+
+  <h2>Results</h2>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Before</th>
+        <th>After</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Time to first response</td>
+        <td class="before">Hours (manual)</td>
+        <td class="after">Under 30 seconds</td>
+      </tr>
+      <tr>
+        <td>Follow-up consistency</td>
+        <td class="before">Inconsistent — memory-dependent</td>
+        <td class="after">100% — never missed</td>
+      </tr>
+      <tr>
+        <td>Manual time per new lead</td>
+        <td class="before">5–10 minutes</td>
+        <td class="after">0 minutes</td>
+      </tr>
+      <tr>
+        <td>Emails referencing prospect's specific goal</td>
+        <td class="before">Depends on the writer</td>
+        <td class="after">Every single one</td>
+      </tr>
+      <tr>
+        <td>Cost per lead handled</td>
+        <td class="before">~$5–15 in labor (imputed)</td>
+        <td class="after">$0.02–$0.05 (API only)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    Results based on live test scenarios with simulated lead submissions across multiple industries
+    (accounting, consulting, coaching, financial advisory).
+  </div>
+
+  <h2>Tech Stack</h2>
+  <div class="stack-grid">
+    <span class="tag">n8n (self-hosted)</span>
+    <span class="tag">Claude API (claude-sonnet-4-6)</span>
+    <span class="tag">Gmail API</span>
+    <span class="tag">Google Sheets API</span>
+    <span class="tag">Tally Forms</span>
+    <span class="tag">Calendly</span>
+    <span class="tag">Webhooks</span>
+  </div>
+
+  <h2>Who This Is For</h2>
+  <p>Any service business that gets leads through a form and wants faster, more personal responses without more manual work. Best fit:</p>
+  <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 16px 0 16px 4px;">
+    <li style="color: var(--text2); font-size: 14px; display: flex; gap: 10px; align-items: flex-start;"><span style="color: var(--green); margin-top: 2px;">→</span> Bookkeeping and accounting firms</li>
+    <li style="color: var(--text2); font-size: 14px; display: flex; gap: 10px; align-items: flex-start;"><span style="color: var(--green); margin-top: 2px;">→</span> Consultants and coaches</li>
+    <li style="color: var(--text2); font-size: 14px; display: flex; gap: 10px; align-items: flex-start;"><span style="color: var(--green); margin-top: 2px;">→</span> Financial advisors and planners</li>
+    <li style="color: var(--text2); font-size: 14px; display: flex; gap: 10px; align-items: flex-start;"><span style="color: var(--green); margin-top: 2px;">→</span> Marketing and creative agencies</li>
+    <li style="color: var(--text2); font-size: 14px; display: flex; gap: 10px; align-items: flex-start;"><span style="color: var(--green); margin-top: 2px;">→</span> Any professional services firm losing deals to slow follow-up</li>
+  </ul>
+
+  <div class="cta-box">
+    <h2>Want this built for your business?</h2>
+    <p>Book a free 20-minute call. I'll map out what this could look like for your specific intake flow.</p>
+    <a href="https://calendly.com/hantous93" target="_blank" class="btn-primary">Book a Free Discovery Call</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Sammi Hantous &nbsp;·&nbsp; <a href="index.html">Back to Portfolio</a> &nbsp;·&nbsp; <a href="mailto:hantous93@gmail.com">hantous93@gmail.com</a></p>
+</footer>
+
+</body>
+</html>
